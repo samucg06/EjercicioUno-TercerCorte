@@ -1,0 +1,49 @@
+#include <unordered_map>
+#include <set>
+using namespace std;
+
+class AuctionSystem {
+private:
+    // itemId -> conjunto ordenado de (montoOferta, userId)
+    unordered_map<int, set<pair<int, int>>> ofertasPorItem;
+    
+    // userId -> (itemId -> montoOferta)
+    unordered_map<int, unordered_map<int, int>> ofertaPorUsuario;
+
+public:
+    AuctionSystem() {
+    }
+
+    void addBid(int userId, int itemId, int bidAmount) {
+        if (ofertaPorUsuario[userId].count(itemId)) {
+            removeBid(userId, itemId);
+        }
+
+        ofertaPorUsuario[userId][itemId] = bidAmount;
+        ofertasPorItem[itemId].insert({bidAmount, userId});
+    }
+
+    void updateBid(int userId, int itemId, int newAmount) {
+        int montoAnterior = ofertaPorUsuario[userId][itemId];
+
+        ofertasPorItem[itemId].erase({montoAnterior, userId});
+        ofertasPorItem[itemId].insert({newAmount, userId});
+
+        ofertaPorUsuario[userId][itemId] = newAmount;
+    }
+
+    void removeBid(int userId, int itemId) {
+        int montoAnterior = ofertaPorUsuario[userId][itemId];
+
+        ofertasPorItem[itemId].erase({montoAnterior, userId});
+        ofertaPorUsuario[userId].erase(itemId);
+    }
+
+    int getHighestBidder(int itemId) {
+        if (!ofertasPorItem.count(itemId) || ofertasPorItem[itemId].empty()) {
+            return -1;
+        }
+
+        return ofertasPorItem[itemId].rbegin()->second;
+    }
+};
